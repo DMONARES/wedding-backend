@@ -25,7 +25,7 @@ func main() {
 
 	// CORS middleware — настраиваем под фронт (замени origin на нужный адрес фронта)
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // пример: фронт работает на 3000 порту
+		AllowOrigins:     []string{"http://localhost:3000", "https://wedding-call.ru"}, // пример: фронт работает на 3000 порту
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
