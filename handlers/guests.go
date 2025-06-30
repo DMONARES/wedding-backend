@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,9 +18,11 @@ func AddGuestHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req GuestRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Printf("Ошибка парсинга гостя: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		log.Printf("Guest to save: %+v\n", req)
 
 		tx, err := db.Begin()
 		if err != nil {

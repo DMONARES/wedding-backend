@@ -23,14 +23,6 @@ func main() {
 
 	r := gin.Default()
 
-	log.Println("AddGuestHandler called")
-	log.Printf("Guest to save: %+v\n", guest)
-	if err != nil {
-		log.Printf("Error saving guest: %v\n", err)
-	} else {
-		log.Println("Guest saved successfully")
-	}
-
 	// CORS middleware — настраиваем под фронт (замени origin на нужный адрес фронта)
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "https://wedding-call.ru"}, // пример: фронт работает на 3000 порту
