@@ -77,39 +77,45 @@ func AddGuestHandler(db *sql.DB) gin.HandlerFunc {
 func GetGuestsHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rows, err := db.Query(`
-			SELECT
-				gg.id AS group_id,
-				gg.main_guest_name,
-				gg.comment,
-				g.name,
-				g.is_main
-			FROM guest_groups gg
-			JOIN guests g ON gg.id = g.group_id
-			ORDER BY gg.id, g.is_main DESC, g.id
-		`)
+	SELECT
+		gg.id AS group_id,
+		gg.main_guest_name,
+		gg.comment,
+		g.id,
+		g.name,
+		g.is_main
+		FROM guest_groups gg
+		JOIN guests g ON gg.id = g.group_id
+		ORDER BY gg.id, g.is_main DESC, g.id
+	`)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query guests"})
 			return
 		}
 		defer rows.Close()
 
+		type Companion struct {
+			ID   int64  `json:"id"`
+			Name string `json:"name"`
+		}
 		type Group struct {
-			GroupID    int64    `json:"group_id"`
-			MainGuest  string   `json:"main_guest"`
-			Comment    string   `json:"comment"`
-			Companions []string `json:"companions"`
+			GroupID     int64       `json:"group_id"`
+			MainGuest   string      `json:"main_guest"`
+			MainGuestID int64       `json:"main_guest_id"`
+			Comment     string      `json:"comment"`
+			Companions  []Companion `json:"companions"`
 		}
 
-		var groups []Group
+		var groups []*Group
 		var currentGroupID int64 = -1
 		var currentGroup *Group
 
 		for rows.Next() {
-			var groupID int64
+			var groupID, guestID int64
 			var mainGuestName, comment, guestName string
 			var isMain bool
 
-			err := rows.Scan(&groupID, &mainGuestName, &comment, &guestName, &isMain)
+			err := rows.Scan(&groupID, &mainGuestName, &comment, &guestID, &guestName, &isMain)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan guest row"})
 				return
@@ -118,20 +124,27 @@ func GetGuestsHandler(db *sql.DB) gin.HandlerFunc {
 			if groupID != currentGroupID {
 				currentGroupID = groupID
 				currentGroup = &Group{
-					GroupID:    groupID,
-					MainGuest:  mainGuestName,
-					Comment:    comment,
-					Companions: []string{},
+					GroupID:     groupID,
+					MainGuest:   mainGuestName,
+					MainGuestID: 0,
+					Comment:     comment,
+					Companions:  []Companion{},
 				}
-				groups = append(groups, *currentGroup)
+				groups = append(groups, currentGroup)
 			}
-
-			if !isMain && currentGroup != nil {
-				currentGroup.Companions = append(currentGroup.Companions, guestName)
+			
+			if isMain && currentGroup != nil {
+				currentGroup.MainGuestID = guestID
+			} else if currentGroup != nil {
+				currentGroup.Companions = append(currentGroup.Companions, Companion{ID: guestID, Name: guestName})
 			}
 		}
 
-		c.JSON(http.StatusOK, groups)
+		var result []Group
+		for _, g := range groups {
+			result = append(result, *g)
+		}
+		c.JSON(http.StatusOK, result)
 	}
 }
 
