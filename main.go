@@ -35,11 +35,11 @@ func main() {
 
 	r.Use(gin.Logger())
 
-	r.POST("/api/login", handlers.LoginHandler)         // без авторизации
-	r.POST("/api/guest", handlers.AddGuestHandler(db))  // тоже без авторизации
-	r.GET("/api/guests", handlers.GetGuestsHandler(db)) // можно оставить без авторизации
-	r.DELETE("/api/guest/:id", handlers.AuthMiddleware(), handlers.DeleteGuestGroupHandler(db))
-	r.PATCH("/api/guest/:id", handlers.AuthMiddleware(), handlers.EditGuestHandler(db))
+	r.POST("/login", handlers.LoginHandler)         // без авторизации
+	r.POST("/guest", handlers.AddGuestHandler(db))  // тоже без авторизации
+	r.GET("/guests", handlers.GetGuestsHandler(db)) // можно оставить без авторизации
+	r.DELETE("/guest/:id", handlers.AuthMiddleware(), handlers.DeleteGuestGroupHandler(db))
+	r.PATCH("/guest/:id", handlers.AuthMiddleware(), handlers.EditGuestHandler(db))
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
